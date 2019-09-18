@@ -32,27 +32,32 @@ public without sharing class enhancedOpportunitySharing {
         List<GroupMember> forgroupMembersmapped_byUserId = new List<GroupMember>();
         
         // Sort each list of groups into a separate user id for easy reference
-        for (Opportunity o : opportunities) {
-            for (GroupMember gm : groupmembers){
-                // Make sure that the userorgroupid we are talking about is a user
-                system.debug('gm.UserOrGroupID: ' + gm.UserOrGroupID);
-                system.debug('o.OwnerId: ' + o.OwnerId);
-                if (gm.UserOrGroupID.getsObjectType() == Schema.User.sObjectType) {
-                    if (o.OwnerId == gm.UserOrGroupId) {
-                        // This user belongs to this group.  Add it to the grouping variable 
-        				forgroupMembersmapped_byUserId.add(gm);		                
-                    }
+        ID uID = opportunities[0].ownerID;
+
+        for (GroupMember gm : groupmembers){
+            // Make sure that the userorgroupid we are talking about is a user
+            system.debug('gm.UserOrGroupID: ' + gm.UserOrGroupID);
+            
+            if (gm.UserOrGroupID.getsObjectType() == Schema.User.sObjectType) {
+                if (uID == gm.UserOrGroupId) {
+                    system.debug('Yeah!');
+                    // This user belongs to this group.  Add it to the grouping variable 
+                    forgroupMembersmapped_byUserId.add(gm);		                
                 }
             }
-            
-            if (forgroupMembersmapped_byUserId != null) {
-                if (forgroupMembersmapped_byUserId.size() > 0 ) {
-                    // Gather all groups for this user id
-                    groupMembersMapped_byUserId.put(o.OwnerId,forgroupMembersmapped_byUserId);
-                }
+        }    
+
+        if (forgroupMembersmapped_byUserId != null) {
+            if (forgroupMembersmapped_byUserId.size() > 0 ) {
+                // Gather all groups for this user id
+            system.debug('add group membrer sort');
+                groupMembersMapped_byUserId.put(uID,forgroupMembersmapped_byUserId);
             }
         }
+
         
+
+            
         system.debug('groupMembersMapped_byUserId.size(): ' + groupMembersMapped_byUserId.size());
         
         if (groupMembersMapped_byUserId.size() <= 0) return; // user is not part of a group
@@ -126,19 +131,39 @@ public without sharing class enhancedOpportunitySharing {
         else {
             system.debug('no opportunities are in groups');
             // We don't have any opportunity share records, but we do have users that a apart of a group
-            for (Opportunity o : Opportunities) {
-                for (GroupMember gm : groupMembersMapped_byUserId.get(o.OwnerId)) {
-                	OpportunityShare oshare = new OpportunityShare(UserOrGroupId = gm.GroupId, OpportunityId=o.id, OpportunityAccessLevel='Read');
-                    system.debug('adding opportunity to group: ' + oshare);
-                    shares_opp_toAdd.add(oshare);
+            for (ID userID : groupMembersMapped_byUserId.keyset()) {
+                system.debug('userID: ' + userID);
+                for (GroupMember gm : groupMembersMapped_byUserId.get(userID)) {
+                    system.debug('gm: ' + gm);
                 }
-            } 
+            }
+            
+            for (ID userID : groupMembersMapped_byUserId.keyset()) {
+                system.debug('userID: ' + userID);
+                for (GroupMember gm : groupMembersMapped_byUserId.get(userID)) {
+                    system.debug('gm: ' + gm);
+                    for (Opportunity o : opportunities) {
+                        system.debug('o.name: ' + o.name);
+                        system.debug('o.ownerId: ' + o.ownerId);
+                        if (o.ownerID == userID) {
+                            system.debug('adding to oshare!!!');
+                            OpportunityShare oshare = new OpportunityShare(UserOrGroupId = gm.GroupId, OpportunityId=o.id, OpportunityAccessLevel='Read');
+                            system.debug('adding opportunity to group: ' + oshare);
+                            shares_opp_toAdd.add(oshare);
+                        }
+                    }
+                }
+            }
         }
         
         system.debug('share opp analysis ****');
+        system.debug('shares_opp_toAdd.size(): ' + shares_opp_toAdd.Size());
         for (OpportunityShare share_opp_toAdd : shares_opp_toadd){
-            system.debug('**** do analysis! we are checking for dups because importing 100 opportunities results in a 10001 DML error');
-        }
+            system.debug('*****************************');
+            system.debug('share_opp_toAdd.UserOrGroupId: ' + share_opp_toAdd.UserOrGroupId);
+            system.debug('share_opp_toAdd.OpportunityId: ' + share_opp_toAdd.OpportunityId);
+            system.debug('share_opp_toAdd.OpportunityAccessLevel: ' + share_opp_toAdd.OpportunityAccessLevel);
+        }        
         system.debug('share opp analysis2 ****');
         if (shares_opp_toAdd.size() > 0) {
             try {
