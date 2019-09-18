@@ -1,5 +1,10 @@
 Sharing Rules Enhancement
 
+Requirements:
+
+•	Accounts object must be private.  If not, the record share will not be available, and the installation will fail 
+    o	To do: detect share settings 
+
 
 Client needs a way to extend sharing rule limits.  Currently the limit is 300 rules with up to 50 criteria based rules, if available for the object.
 
@@ -67,7 +72,7 @@ User is removed from group. Handled
 
 
 First Prototype Test:
- Adding 100 opportunities resulted in 100001 error with two group members. Why?
+Adding 100 opportunities resulted in 100001 error with two group members. Why?
 
 Remember:
 Add help page with instructions and video# mm---enhanced-sharing
