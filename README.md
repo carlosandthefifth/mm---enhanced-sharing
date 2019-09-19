@@ -65,10 +65,38 @@ Based on my testing when we change the opportunity owner, the sharing record is 
 I tested 1000 groups and was able to add a sharing record for each.
 
 Testing Scenario:
-New Opportunity: When an opportunity is created, check the User ID and find groups associated with that UserId and share the opportunity with that group
-Owner ID changes: If the owner id is changed, get the new user id, check the groups that that user id is associated with and make sure that the opportunity id is shared with those groups
-User is added to group.  This is handled by SF
-User is removed from group. Handled
+1.  Two users that belong to 1 group inserting 1,000 opportunities
+        Using bulk API was successful -Total: time:26.5 seconds
+2.      Using non-bulk it failed because it has to be 10 or less seconds
+    SOLUTION: making a small change I was able to reduce the time to 3 seconds
+
+
+TRIGGER IMPACT ON PERFORMANCE
+Inserting 100 accounts 20500 opportunities
+
+NO TRIGGER:
+non-bulk batch 200
+1.  20500 successful records 
+
+bulk batch 2000
+2.  11100 successful and 9400 errors Row lock errors
+
+Bulk batch serial enabled 
+3.   20500 all records inserted successfully
+
+TRIGGER ENABLED
+
+non-bulk batch 200
+1.  20500 successful inserts
+
+bulk batch 2000
+2.  13500 inserted successfully 7000 unsuccessful row lock
+
+bulk batch 2000 serial enabled
+3.  20500 all records insert successfully 
+
+Conclusion trigger does not impact load.  Looking at the code, this would seem obvious, but this test caused me to use SOQL queries instead of trying to organize the data manually in order to avoid a SOQL 101 limit
+  
 
 
 First Prototype Test:
