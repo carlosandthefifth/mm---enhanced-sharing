@@ -1,0 +1,20 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global">
+<!--
+    Interface layout for Enhanced Sharing
+
+    Remember to consider hierarchies 
+-->
+<aura:attribute name="options" type="List"/>
+
+<center>
+    <lightning:dualListbox aura:id="duallist"
+                            name="objects"  
+                            label= "Select objects" 
+                            sourceLabel="Available" 
+                            selectedLabel="Selected" 
+                            fieldLevelHelp="Select object for records that you want to create.  Double click on object to change record count."
+                            options="{!v.options}"
+                            value="{!v.selectedOptions}"
+                            onchange="{!c.myAction}"/>
+</center>
+</aura:component>	
