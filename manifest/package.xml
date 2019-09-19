@@ -8,5 +8,18 @@
         <members>opportunityTrigger</members>
         <name>ApexTrigger</name>
     </types>
+    <types>
+        <members>Public_Groups</members>
+        <name>CustomApplication</name>
+    </types>
+    <types>
+        <members>Public_Groups</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Public_Groups</members>
+        <members>Public_Groups_UtilityBar</members>
+        <name>FlexiPage</name>
+    </types>
     <version>46.0</version>
 </Package>
