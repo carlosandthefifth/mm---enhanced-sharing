@@ -4,6 +4,7 @@
 
     Remember to consider hierarchies 
 -->
+    <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="cardHeaderPublicGroupTitle" type="String" default="Public Groups" />
     <aura:attribute name="cardFooterPublicGroupTitle" type="String" default="Marcus &amp; Millichap" />
     <aura:attribute name="cardHeaderGroupTitle" type="String" default="Group Manager"/>
@@ -29,6 +30,15 @@
     { label: 'van Houten, Carice', value: 'Carice van Houten' },
     { label: 'Staley, Layne', value: 'Layne Staley' }]"/>
     
+
+    <div class="slds-grid slds-grid_align-end">
+        <div class="slds-col">
+            <lightning:button variant="destructive"
+                label="Help"
+                title="Help"
+                onclick="{! c.openModel }" />
+        </div>
+    </div>
     <lightning:card>
         <aura:set attribute="title">
             <Lightning:icon iconName="utility:connected_apps" size="small"/>
@@ -81,33 +91,69 @@
     </lightning:card>
 
     <lightning:card>
-            <aura:set attribute="title">
-                <Lightning:icon iconName="utility:connected_apps" size="small"/>
-                {!v.cardHeaderUserTitle}
-            </aura:set>
-                <div class="slds-grid slds-wrap">
-                    <div class="slds-col slds-size_2-of-12">
-                        <Lightning:select name="selectGroup" label="Select Group">
-                            <aura:iteration items="{!v.groupNames}" var="group">
-                                <option value="{!group}">{!group}</option>
-                            </aura:iteration>
-                        </Lightning:select>
-                        <br/>
+        <aura:set attribute="title">
+            <Lightning:icon iconName="utility:connected_apps" size="small"/>
+            {!v.cardHeaderUserTitle}
+        </aura:set>
+            <div class="slds-grid slds-wrap">
+                <div class="slds-col slds-size_2-of-12">
+                    <Lightning:select name="selectGroup" label="Select Group">
+                        <aura:iteration items="{!v.groupNames}" var="group">
+                            <option value="{!group}">{!group}</option>
+                        </aura:iteration>
+                    </Lightning:select>
+                    <br/>
+                </div>
+            </div>
+            <div class="slds-border_bottom">
+                For Group: <b>{!v.groupObjectName}</b>
+            </div>
+            <br/>
+            <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
+                            sourceLabel="Available Users"
+                            selectedLabel="Selected Users"
+                            fieldLevelHelp="Add or remove users from selected group"
+                            options="{! v.listOptions }"
+                            onchange="{! c.myAction }"/>
+        <aura:set attribute="footer">
+            {!v.cardFooterUserFooter}
+        </aura:set><br/>
+        <lightning:button variant="Success" label="Save" title="Save" onclick="{! c.myAction }"/>
+    </lightning:card>
+
+    <!--Modal Dialog Box-->
+    <div class="slds-m-around_xx-large">
+        <!--Use aura:if tag to display/hide popup based on isModalOpen value-->  
+        <aura:if isTrue="{!v.isModalOpen}">
+                
+            <!-- Modal/Popup Box starts here-->
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- Modal/Popup Box Header Starts here-->
+                    <header class="slds-modal__header">
+                        <lightning:buttonIcon iconName="utility:close"
+                                                onclick="{! c.closeModel }"
+                                                alternativeText="close"
+                                                variant="bare-inverse"
+                                                class="slds-modal__close"/>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Modal/PopUp Box</h2>
+                    </header>
+                    <!--Modal/Popup Box Body Starts here-->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <p><b>Modals/Popup Box are used to display content in a layer above the app. This paradigm is used in cases such as the creation or editing of a record, as well as various types of messaging and wizards.
+                            </b>
+                        </p>
                     </div>
+                    <!--Modal/Popup Box Footer Starts here-->
+                    <footer class="slds-modal__footer">
+                        <lightning:button variant="brand"
+                                            label="Close"
+                                            title="Close"
+                                            onclick="{! c.closeModel }"/>
+                    </footer>
                 </div>
-                <div class="slds-border_bottom">
-                    For Group: <b>{!v.groupObjectName}</b>
-                </div>
-                <br/>
-                <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
-                                sourceLabel="Available Users"
-                                selectedLabel="Selected Users"
-                                fieldLevelHelp="Add or remove users from selected group"
-                                options="{! v.listOptions }"
-                                onchange="{! c.myAction }"/>
-            <aura:set attribute="footer">
-                {!v.cardFooterUserFooter}
-            </aura:set><br/>
-            <lightning:button variant="Success" label="Save" title="Save" onclick="{! c.myAction }"/>
-        </lightning:card>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </aura:if>
+    </div>
 </aura:component>	
