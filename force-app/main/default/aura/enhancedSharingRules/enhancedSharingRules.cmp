@@ -4,17 +4,110 @@
 
     Remember to consider hierarchies 
 -->
-<aura:attribute name="listOptions" type="List" default="[
-{ label: 'English', value: 'en' },
-{ label: 'German', value: 'de' },
-{ label: 'Spanish', value: 'es' },
-{ label: 'French', value: 'fr' },
-{ label: 'Italian', value: 'it' },
-{ label: 'Japanese', value: 'ja' }]"/>
+    <aura:attribute name="cardHeaderPublicGroupTitle" type="String" default="Public Groups" />
+    <aura:attribute name="cardFooterPublicGroupTitle" type="String" default="Marcus &amp; Millichap" />
+    <aura:attribute name="cardHeaderGroupTitle" type="String" default="Group Manager"/>
+    <aura:attribute name="cardHeaderGroupFooter" type="String" default="Group Manager"/>
+    <aura:attribute name="cardHeaderUserTitle" type="String" default="User Manager"/>
+    <aura:attribute name="cardHeaderUserFooter" type="String" default="User Manager"/>
+    <aura:attribute name="groupObjectName" type="String" default="Opportunity"/>
+    <aura:attribute name="objectNames" type="String[]" default="['Account', 'Contact', 'Property', 'Opportunity']"/>
+    <aura:attribute name="groupNames" Type="String[]" default="[
+        'Goldman Sachs',
+        'Merrill Lynch', 
+        'Fidelity',
+        'Chase',
+        'Wells Fargo',
+        'ROI Financial Advisors',
+        'JP Morgan']"/>
 
-<lightning:dualListbox aura:id="selectOptions" name="Select Options"  label= "Select Options"
-                       sourceLabel="Available Options"
-                       selectedLabel="Selected Options"
-                       options="{! v.listOptions }"
-                       onchange="{! c.myAction }"/>
+    <aura:attribute name="listOptions" type="List" default="[
+    { label: 'Davidson, Pete', value: 'Pete Davidson' },
+    { label: 'Waltz, Christoph', value: 'Christoph Waltz' },
+    { label: 'del Toro, Benicio', value: 'Benico del Toro' },
+    { label: 'Cuarón, Alfonso', value: 'Alfonso Cuarón' },
+    { label: 'van Houten, Carice', value: 'Carice van Houten' },
+    { label: 'Staley, Layne', value: 'Layne Staley' }]"/>
+    
+    <lightning:card>
+        <aura:set attribute="title">
+            <Lightning:icon iconName="utility:connected_apps" size="small"/>
+            {!v.cardHeaderGroupTitle}
+        </aura:set>
+        <div class="slds-border_bottom">
+            <b>Select Object</b>
+        </div>
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_2-of-12">
+                <Lightning:select name="selectObject" label="Select Object">
+                    <aura:iteration items="{!v.objectNames}" var="aobject">
+                        <option value="{!aobject}">{!aobject}</option>
+                    </aura:iteration>
+                </Lightning:select>
+            </div>
+        </div><br/>
+        <div class="slds-border_bottom">
+            <b>Create a New Group</b>
+        </div>
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_2-of-12">
+                <lightning:input type="String" name="groupNameInput" label="Group Name" />
+                <Lightning:select name="selectAccessLevel" label="Select Access Level">
+                    <option value="read">Read</option>
+                    <option value="edit">Read/Write</option>
+                </Lightning:select>
+            </div>
+        </div>
+        <br/>
+        <lightning:button variant="Success" label="Create Group" title="Create Group" onclick="{! c.myAction }"/>
+        <br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <div class="slds-border_bottom">
+            <p><b>Available Groups</b></p>
+        </div>
+        <div class="slds-scrollable" style="height:15rem;width:24rem; background-color: cadetblue">
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="slds-text-longform" style="width:150%">
+                <aura:iteration items="{!v.groupNames}" var="group">
+                    <p style="background-color:lightblue; color:darkblue">
+                    <lightning:button variant="destructive" label="Delete" title="Delete Group" onclick="{!c.MyAction}" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    {!group}</p> 
+                </aura:iteration>
+            </div>
+        </div>
+        <aura:set attribute="footer">
+            {!v.cardFooterGroupTitle}
+        </aura:set>
+    </lightning:card>
+
+    <lightning:card>
+            <aura:set attribute="title">
+                <Lightning:icon iconName="utility:connected_apps" size="small"/>
+                {!v.cardHeaderUserTitle}
+            </aura:set>
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_2-of-12">
+                        <Lightning:select name="selectGroup" label="Select Group">
+                            <aura:iteration items="{!v.groupNames}" var="group">
+                                <option value="{!group}">{!group}</option>
+                            </aura:iteration>
+                        </Lightning:select>
+                        <br/>
+                    </div>
+                </div>
+                <div class="slds-border_bottom">
+                    For Group: <b>{!v.groupObjectName}</b>
+                </div>
+                <br/>
+                <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
+                                sourceLabel="Available Users"
+                                selectedLabel="Selected Users"
+                                fieldLevelHelp="Add or remove users from selected group"
+                                options="{! v.listOptions }"
+                                onchange="{! c.myAction }"/>
+            <aura:set attribute="footer">
+                {!v.cardFooterUserFooter}
+            </aura:set><br/>
+            <lightning:button variant="Success" label="Save" title="Save" onclick="{! c.myAction }"/>
+        </lightning:card>
 </aura:component>	
