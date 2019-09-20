@@ -1,4 +1,4 @@
-<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes" access="global">
+<aura:component controller="enhancedSharingRules" implements="force:appHostable,flexipage:availableForAllPageTypes" access="global">
 <!--
     Interface layout for Enhanced Sharing
 
@@ -33,7 +33,7 @@
 
     <div class="slds-grid slds-grid_align-end">
         <div class="slds-col">
-            <lightning:button variant="destructive"
+            <lightning:button variant="success"
                 label="Help"
                 title="Help"
                 onclick="{! c.openModel }" />
