@@ -21,5 +21,9 @@
         <members>Public_Groups_UtilityBar</members>
         <name>FlexiPage</name>
     </types>
+    <types>
+        <members>*</members>
+        <name>ContentAsset</name>
+    </types>
     <version>46.0</version>
 </Package>

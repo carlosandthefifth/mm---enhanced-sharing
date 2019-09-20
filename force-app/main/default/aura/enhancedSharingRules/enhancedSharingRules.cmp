@@ -4,19 +4,17 @@
 
     Remember to consider hierarchies 
 -->
-<aura:attribute name="options" type="List"/>
-<aura:attribute name="groupName" type="String"/>
+<aura:attribute name="listOptions" type="List" default="[
+{ label: 'English', value: 'en' },
+{ label: 'German', value: 'de' },
+{ label: 'Spanish', value: 'es' },
+{ label: 'French', value: 'fr' },
+{ label: 'Italian', value: 'it' },
+{ label: 'Japanese', value: 'ja' }]"/>
 
-
-<lightning:input type="text" label="Group Name"  value="{!v.groupName}" />
-
-    <lightning:dualListbox aura:id="duallist"
-                            name="objects"  
-                            label= "Select objects" 
-                            sourceLabel="Available" 
-                            selectedLabel="Selected" 
-                            fieldLevelHelp="Select object for records that you want to create.  Double click on object to change record count."
-                            options="{!v.options}"
-                            value="{!v.selectedOptions}"
-                            onchange="{!c.myAction}"/>
+<lightning:dualListbox aura:id="selectOptions" name="Select Options"  label= "Select Options"
+                       sourceLabel="Available Options"
+                       selectedLabel="Selected Options"
+                       options="{! v.listOptions }"
+                       onchange="{! c.myAction }"/>
 </aura:component>	
