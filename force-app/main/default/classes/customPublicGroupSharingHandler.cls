@@ -6,10 +6,10 @@
 
 	This will be invoked through the opportunity trigger
  */
-public without sharing class enhancedOpportunitySharing {
+public without sharing class customPublicGroupSharingHandler {
     
 
-    public static void calcOpportunityShareInsert(List<Opportunity> opportunities) {
+    public static void onInsert(List<Opportunity> opportunities) {
         /*
             Handles record group sharing
         */
@@ -44,8 +44,8 @@ public without sharing class enhancedOpportunitySharing {
 
     }
 
-   public static void calcOpportunityShareUpdate(List<Opportunity> new_opportunities) {
+   public static void onUpdate(List<Opportunity> new_opportunities) {
 
-        calcOpportunityShareInsert(new_opportunities);
+        onInsert(new_opportunities);
    }
 }
