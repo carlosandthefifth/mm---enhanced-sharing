@@ -1,9 +1,11 @@
-<aura:component controller="enhancedSharingRules" implements="force:appHostable,flexipage:availableForAllPageTypes" access="global">
+<aura:component controller="enhancedSharingRulesController" implements="flexipage:availableForAllPageTypes" access="global">
 <!--
     Interface layout for Enhanced Sharing
 
     Remember to consider hierarchies 
 -->
+    <aura:handler name="init" value="{!this}" action="{!c.onInit}"/>
+    <aura:attribute name="groupSelected" type="String" />
     <aura:attribute name="isModalOpen" type="boolean" default="false"/>
     <aura:attribute name="cardHeaderPublicGroupTitle" type="String" default="Public Groups" />
     <aura:attribute name="cardFooterPublicGroupTitle" type="String" default="Marcus &amp; Millichap" />
@@ -13,23 +15,25 @@
     <aura:attribute name="cardHeaderUserFooter" type="String" default="User Manager"/>
     <aura:attribute name="groupObjectName" type="String" default="Opportunity"/>
     <aura:attribute name="objectNames" type="String[]" default="['Account', 'Contact', 'Property', 'Opportunity']"/>
-    <aura:attribute name="groupNames" Type="String[]" default="[
-        'Goldman Sachs',
-        'Merrill Lynch', 
-        'Fidelity',
-        'Chase',
-        'Wells Fargo',
-        'ROI Financial Advisors',
-        'JP Morgan']"/>
-
-    <aura:attribute name="listOptions" type="List" default="[
-    { label: 'Davidson, Pete', value: 'Pete Davidson' },
-    { label: 'Waltz, Christoph', value: 'Christoph Waltz' },
-    { label: 'del Toro, Benicio', value: 'Benico del Toro' },
-    { label: 'Cuarón, Alfonso', value: 'Alfonso Cuarón' },
-    { label: 'van Houten, Carice', value: 'Carice van Houten' },
-    { label: 'Staley, Layne', value: 'Layne Staley' }]"/>
     
+
+    <aura:handler event="force:refreshView" action="{!c.isRefreshed}" />
+
+
+    
+    <aura:attribute name="inputGroupName" type="String"/>
+    <aura:attribute name="inputGroupAccessLevel" type="String[]" default="['read', 'read/write']"/>
+
+    <aura:attribute name="groupNames" type="String[]"/>
+
+    <aura:attribute name="userRecords" type="User[]"/>
+    <aura:attribute name="availableUserNames" type="List"/>
+    <aura:attribute name="selectedUserNames" type="List"/>
+    <aura:attribute name="selectedObjectName" type="String"/>
+
+    
+
+    version 4.7
 
     <div class="slds-grid slds-grid_align-end">
         <div class="slds-col">
@@ -49,7 +53,7 @@
         </div>
         <div class="slds-grid slds-wrap">
             <div class="slds-col slds-size_2-of-12">
-                <Lightning:select name="selectObject" label="Select Object">
+                <Lightning:select name="selectObject" label="Select Object" value="{!v.selectedObjectName}" onchange="{!c.selectNewObject}">
                     <aura:iteration items="{!v.objectNames}" var="aobject">
                         <option value="{!aobject}">{!aobject}</option>
                     </aura:iteration>
@@ -61,26 +65,29 @@
         </div>
         <div class="slds-grid slds-wrap">
             <div class="slds-col slds-size_2-of-12">
-                <lightning:input type="String" name="groupNameInput" label="Group Name" />
+                <lightning:input type="String" name="groupNameInput" label="Group Name" value="{!v.inputGroupName}" maxLength="35"/>
+                <!--
                 <Lightning:select name="selectAccessLevel" label="Select Access Level">
-                    <option value="read">Read</option>
-                    <option value="edit">Read/Write</option>
+                    <aura:iteration items="{!v.inputGroupAccessLevel}" var="accessLevel">
+                        <option value="{!accessLevel}" text="{!accessLevel}"></option>
+                    </aura:iteration>
                 </Lightning:select>
+            -->
             </div>
         </div>
         <br/>
-        <lightning:button variant="Success" label="Create Group" title="Create Group" onclick="{! c.myAction }"/>
+        <lightning:button aura:id="createGroupButton" variant="Success" label="Create Group" title="Create Group" onclick="{! c.createGroup }"/>
         <br/>
         &nbsp;&nbsp;&nbsp;&nbsp;
         <div class="slds-border_bottom">
             <p><b>Available Groups</b></p>
         </div>
-        <div class="slds-scrollable" style="height:15rem;width:24rem; background-color: cadetblue">
+        <div class="slds-scrollable" aura:id="groupScrollBox" style="height:15rem;width:24rem; background-color:rgb(250, 250, 250)">
                     &nbsp;&nbsp;&nbsp;&nbsp;
             <div class="slds-text-longform" style="width:150%">
                 <aura:iteration items="{!v.groupNames}" var="group">
                     <p style="background-color:lightblue; color:darkblue">
-                    <lightning:button variant="destructive" label="Delete" title="Delete Group" onclick="{!c.MyAction}" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <lightning:button aura:id="deleteGroupButton" variant="destructive" value="{!group}" label="Delete" title="Delete Group" onclick="{!c.deleteGroup}" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     {!group}</p> 
                 </aura:iteration>
             </div>
@@ -97,7 +104,7 @@
         </aura:set>
             <div class="slds-grid slds-wrap">
                 <div class="slds-col slds-size_2-of-12">
-                    <Lightning:select name="selectGroup" label="Select Group">
+                    <Lightning:select name="selectGroup" label="Select Group" aura:id="groupSelect" value="{!v.groupSelected}" onchange="{!c.groupSelect}">
                         <aura:iteration items="{!v.groupNames}" var="group">
                             <option value="{!group}">{!group}</option>
                         </aura:iteration>
@@ -106,19 +113,47 @@
                 </div>
             </div>
             <div class="slds-border_bottom">
-                For Group: <b>{!v.groupObjectName}</b>
+                For object: <b>{!v.groupObjectName}</b>
             </div>
             <br/>
+           <div aura:id="checkboxAddInputs">
+                <lightning:button aura:id="addToGroupButton" variant="brand" value="addToGroupButton" label="Add to Group" title="Add To Group" onclick="{!c.moveToGroup}" />     <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="slds-text-longform" style="width:150%">
+                        <aura:iteration items="{!v.availableUserNames}" var="user">
+                            <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
+                        
+                        </aura:iteration>
+                    </div>
+                </div>
+            </div>
+
+            <div aura:id="checkboxRemoveInputs">
+                <lightning:button aura:id="removeFromGroupButton" variant="brand" value="removeFromGroupButton" label="Remove From Group" title="Remove From Group" onclick="{!c.moveFromGroup}"/>     
+                <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="slds-text-longform" style="width:150%">
+                        <aura:iteration items="{!v.selectedUserNames}" var="user">
+                            <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
+                            
+                        </aura:iteration>
+                    </div>
+                </div>
+            </div>
+
+                <!--
+
+            Duallistbox locks up with 15000 users.  It takes 3 minutes for it to be available. For this reason we are trying a different approach
             <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
                             sourceLabel="Available Users"
                             selectedLabel="Selected Users"
                             fieldLevelHelp="Add or remove users from selected group"
-                            options="{! v.listOptions }"
-                            onchange="{! c.myAction }"/>
+                            options="{! v.userNames }"
+                            value="{!v.selectedUserNames}"/>
+            -->
         <aura:set attribute="footer">
             {!v.cardFooterUserFooter}
         </aura:set><br/>
-        <lightning:button variant="Success" label="Save" title="Save" onclick="{! c.myAction }"/>
     </lightning:card>
 
     <!--Modal Dialog Box-->

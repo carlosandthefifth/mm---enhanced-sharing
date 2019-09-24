@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>enhancedOpportunitySharing</members>
+        <members>customPublicGroupSharingHandler</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>enhancedSharingRulesController</members>
         <name>ApexClass</name>
     </types>
     <types>
@@ -22,8 +26,12 @@
         <name>FlexiPage</name>
     </types>
     <types>
-        <members>*</members>
+        <members>download_1</members>
         <name>ContentAsset</name>
+    </types>
+    <types>
+        <members>enhancedSharingRules</members>
+        <name>AuraDefinitionBundle</name>
     </types>
     <version>46.0</version>
 </Package>
