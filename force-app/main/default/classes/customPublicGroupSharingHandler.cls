@@ -27,7 +27,7 @@ public without sharing class customPublicGroupSharingHandler {
             for (groupmember g : gps) {
                 for (account a : accounts) {
                     if (g.UserOrGroupId == a.ownerID)  {
-                        accountshare share_record = new accountshare(accountId=a.id, UserOrGroupID=g.groupID, accountAccessLevel='read');
+                        accountshare share_record = new accountshare(accountId=a.id, UserOrGroupID=g.groupID, accountAccessLevel='read', OpportunityAccessLevel='none', ContactAccessLevel='none');
                         share_records.add(share_record);
                     }
                 }

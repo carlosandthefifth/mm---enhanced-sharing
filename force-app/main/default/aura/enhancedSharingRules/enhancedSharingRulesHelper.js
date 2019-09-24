@@ -1,12 +1,13 @@
 ({
     onInit : function(component,event,helper) {
         var action = component.get("c.getObjectNames");
+        var haveGroups = false;
 
         action.setCallback(this,function(response){
             var state = response.getState();
             if (state === 'SUCCESS') {
                 var returnValues = response.getReturnValue();
-
+                
                 component.set("v.objectNames",returnValues);
                 
 
@@ -25,6 +26,9 @@
             var state = response.getState();
             if (state === 'SUCCESS') { 
                 var groups = response.getReturnValue();
+                var haveGroups = (groups.length > 0);
+                component.set("v.haveGroups", haveGroups);
+
                 if (groups != null) {
                     component.set("v.groupNames", groups);
                     console.log("groups: " + groups[0]);
@@ -170,6 +174,8 @@
         var groupName = component.get("v.inputGroupName")
         var groupNames = component.get("v.groupNames");
         var objectName = component.get("v.selectedObjectName");
+        
+        if (objectName == "Property") objectName = "Asset";
 
         var pattern= new RegExp("^[A-Za-z_-][A-Za-z0-9_-]*$");
 
@@ -209,6 +215,15 @@
             return;
         }
 
+        if (groupName.indexOf("_") >=0) {
+            type = "Error";
+            title = "Error";
+            message = "Group names cannot contain underscores for this application";
+
+            helper.showToast(component,event,type,title,message);
+            return;
+        }
+
         for(var i = 0; i < groupNames.length; i++) {
             if (groupName == groupNames[i]) {
                 type = "Error";
@@ -231,10 +246,53 @@
         action.setCallback(this,function(response){
             var state = response.getState();
             if (state === "SUCCESS") {
+                var haveGroups = component.get("v.haveGroups");  
                 var groupNames = response.getReturnValue();
+
                 component.set("v.groupNames",groupNames);        
-                component.set("v.inputGroupName","");                     
+                component.set("v.groupSelected",groupNames[0]);
+                component.set("v.inputGroupName","");              
+                component.set("v.haveGroups", true);
+
+                if (!haveGroups) {
+
+                    var getUserNamesAction = component.get("c.getAvailableUsers");
+        
+                    getUserNamesAction.setParams({"users" : []});
+                    getUserNamesAction.setCallback(this,function(response){
+                        var state = response.getState();
+                        if (state === 'SUCCESS') { 
+                            console.log("users");
+                            var results = response.getReturnValue();
+                            component.set("v.userRecords", results);
+                            var userRecords = component.get("v.userRecords");
+                            console.log(">>> user" + JSON.stringify(userRecords));
+            
+                            var strArry = [];
+                            console.log("K:fdfd: " + JSON.stringify(results));
+                            for (var i = 0; i < results.length; i++) {
+                                if (results[i].FirstName != null && results[i].LastName != null && results[i].FirstName != 'Automated' && results[i].LastName != 'Process') {
+                                    var fullname = results[i].LastName + ", " + results[i].FirstName + " - " + results[i].Username;
+                                    strArry.push({label:fullname, value: results[i].Id})
+                                }
+                            }
+            
+                            console.log(">>> " + JSON.stringify(strArry));
+            
+                            component.set("v.availableUserNames", strArry);
+            //                component.set("v.selectedUserNames", stryArry.value);
+            
+                            helper.groupSelect(component,event,helper);
+            
+                        }
+                    });
+                    $A.enqueueAction(getUserNamesAction);
+
+
+                }
+
                 helper.showToast(component,event,type,title,message);
+
             } else {
                 type = "Error";
                 title = "Error";
@@ -257,7 +315,7 @@
 
         console.log("myInputs[i]: " + JSON.stringify(myInputs));
 
-        for (var i = 0; i <= myInputs.length; i ++) {
+        for (var i = 0; i < myInputs.length; i ++) {
             var checked = myInputs[i].get("v.checked");
             var userID  =  myInputs[i].get("v.value");
             var userName = myInputs[i].get("v.label");
@@ -268,8 +326,11 @@
             console.log("myInput[i].value: " + myInputs[i].get("v.value"));
             console.log("myInput[i].label: " + myInputs[i].get("v.label"));
 
+            console.log("next1");
             if (checked) {
+                console.log("next2");
                 for (var j = 0; j <= selectedUserNames.length; j++) {
+                    console.log("next3");
                     console.log(">>selectedUserNames[j].get(v.value): " + selectedUserNames[j].value);
                     if (selectedUserNames[j].value == userID) {
                         inList = true;
@@ -292,13 +353,14 @@
                     console.log("selectedUserNames: " + JSON.stringify(selectedUserNames));
                 }
             } 
-            console.log("userids: " + JSON.stringify(userIDstoRemove));
+            console.log("useridstoRemove: " + JSON.stringify(userIDstoRemove));
             component.set("v.availableUserNames", availableUserNames);
             component.set("v.selectedUserNames", selectedUserNames);
-         
-            helper.removeFromGroup(component,event,helper,userIDstoRemove);
-
+         console.log('after userids1');
         }
+        console.log('after userids2');
+        helper.removeFromGroup(component,event,helper,userIDstoRemove);
+
         // List<ID> UserIDsAdded, List<ID> UserIDsRemoved, String GroupName, String ObjectType
      },
     
@@ -319,8 +381,22 @@
             var state = response.getState();
             if (state === "SUCCESS") {
                 var results = response.getReturnValue();
+                if (results.length <=0) {
+                    component.set("v.haveGroups", false);
+                    var noGroups = [];
+                    component.set("v.groupSelected",noGroups);
+                } else {
+                    component.set("v.groupSelected",results[0]);
+                }
                 component.set("v.groupNames",results);   
+                var debuggroupnames = component.get("v.groupNames");
+
+                for (var i = 0; i < debuggroupnames.length; i++) {
+                    console.log(">>groupnames: " + debuggroupnames[i]);
+
+                }
                 helper.showToast(component,event,type,title,message);
+                helper.groupSelect(component,event,helper);
                 //helper.onInit(component,event,helper);
             } else {
                 type = "Error";
@@ -334,14 +410,16 @@
         $A.enqueueAction(action);
     },
 
-    removeFromGroup : function(component, event, helper,userIds) {
-        console.log("userIds2 : " + JSON.stringify(userIds));
+    removeFromGroup : function(component, event, helper,userIDstoRemove) {
+        console.log("userIDstoRemove : " + JSON.stringify(userIDstoRemove));
         var groupName = component.get("v.groupSelected"); 
+        var objectName = component.get("v.selectedObjectName");
+        if (objectName == "Property") objectName = "Asset";
 
 console.log("1");
         var action = component.get("c.removeFromMembership");
         console.log("1.5");
-        action.setParams({"UserIDsRemoved" :userIds, "GroupName" :groupName, "ObjectType" : "Opportunity"});
+        action.setParams({"UserIDsRemoved" :userIDstoRemove, "GroupName" :groupName, "ObjectType" : objectName});
         console.log("2");
         
         action.setCallback(this, function(response){
@@ -366,6 +444,7 @@ console.log("1");
     addToGroup : function(component, event, helper) {
         console.log("inside addToGroup");
         var objectName = component.get("v.selectedObjectName");
+        if (objectName == "Property") objectName = "Asset";
         var action = component.get("c.addToMembership");
         console.log("inside addToGroup1");
         var selectedUserNames = component.get("v.selectedUserNames");
@@ -377,11 +456,14 @@ console.log("1");
             userIds.push(selectedUserNames[i].value);
         }
         console.log("userIds: " + JSON.stringify(userIds));
-
+        
+        console.log("group: " + group);
+        console.log("objectName: " + objectName);
         action.setParams({UserIDsAdded:userIds,GroupName:group, ObjectType: objectName});
         
         action.setCallback(this, function(response){
             var state = action.getState();
+            console.log("state: " + state);
             if (state === 'SUCCESS') {
                 var type = "Success";
                 var title = "Success";
@@ -397,6 +479,30 @@ console.log("1");
         });
         $A.enqueueAction(action);
      },
+
+     openModalToggle: function(component, event, helper) {
+        console.log("op1");
+        var isModalOpen = component.get("v.isModalOpen");
+        console.log("op2");
+
+        if (isModalOpen) 
+        console.log("isModalOpen is true");
+        else
+        console.log("isModalOpen is false");
+        console.log("op3");
+
+        isModalOpen = !isModalOpen;
+
+        if (isModalOpen) 
+        console.log("isModalOpen is true");
+        else
+        console.log("isModalOpen is false");
+
+        console.log("op4");
+        component.set("v.isModalOpen", isModalOpen);
+        console.log("op5");
+//        $A.get("e.force:refreshView").fire()
+     },
   
     showToast : function(component,event,type,title,message) {
         var toastEvent = $A.get("e.force:showToast");
@@ -410,21 +516,39 @@ console.log("1");
     },
     
     selectNewObject : function(component, event, helper){
-        var groupName = component.get("v.selectedObjectName");
+        console.log("selectnewobject1");
+        var objectName = component.get("v.selectedObjectName");
+        console.log("selectnewobject1.1");
         var getGroupNamesAction = component.get("c.getPublicGroupNames");
-        if (groupName == 'Property') groupName='Asset';
-        getGroupNamesAction.setParams({"objectName" : groupName});
+        console.log("selectnewobject1.2");
+        if (objectName == 'Property') objectName='Asset';
+        getGroupNamesAction.setParams({"objectName" : objectName});
 
         getGroupNamesAction.setCallback(this,function(response){
             var state = response.getState();
+            console.log("selectnewobject1.3: " + state);
+
             if (state === 'SUCCESS') { 
+                console.log("selectnewobject2");
                 var groups = response.getReturnValue();
-                if (groups != null) {
+                if (groups.length > 0) {
+                    console.log("selectnewobject3");
                     component.set("v.groupNames", groups);
+                    component.set("v.groupSelected", groups[0]);
                     console.log("groups: " + groups[0]);
-                    component.set("v.groupSelected",groups[0])
+                    component.set("v.groupSelected",groups[0]);
+                    component.set("v.haveGroups", true);
                     helper.groupSelect(component,event,helper);
+                    console.log("selectnewobject4");
+                } else {
+                    console.log("selectnewobject5");
+                    component.set("v.haveGroups", false);
                 }
+            } else {
+                console.log("selectnewobject5");
+                var groups = [];
+                component.set("v.groupSelected",groups);
+                component.set("v.haveGroups", false);
             }
         });
         $A.enqueueAction(getGroupNamesAction);

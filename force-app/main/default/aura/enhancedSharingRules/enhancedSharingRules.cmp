@@ -15,6 +15,7 @@
     <aura:attribute name="cardHeaderUserFooter" type="String" default="User Manager"/>
     <aura:attribute name="groupObjectName" type="String" default="Opportunity"/>
     <aura:attribute name="objectNames" type="String[]" default="['Account', 'Contact', 'Property', 'Opportunity']"/>
+    <aura:attribute name="haveGroups" type="boolean" default="false"/>
     
 
     <aura:handler event="force:refreshView" action="{!c.isRefreshed}" />
@@ -31,16 +32,12 @@
     <aura:attribute name="selectedUserNames" type="List"/>
     <aura:attribute name="selectedObjectName" type="String"/>
 
-    
-
-    version 4.7
-
     <div class="slds-grid slds-grid_align-end">
         <div class="slds-col">
             <lightning:button variant="success"
                 label="Help"
                 title="Help"
-                onclick="{! c.openModel }" />
+                onclick="{! c.openModalToggle }" />
         </div>
     </div>
     <lightning:card>
@@ -79,83 +76,84 @@
         <lightning:button aura:id="createGroupButton" variant="Success" label="Create Group" title="Create Group" onclick="{! c.createGroup }"/>
         <br/>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        <div class="slds-border_bottom">
-            <p><b>Available Groups</b></p>
-        </div>
-        <div class="slds-scrollable" aura:id="groupScrollBox" style="height:15rem;width:24rem; background-color:rgb(250, 250, 250)">
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-            <div class="slds-text-longform" style="width:150%">
-                <aura:iteration items="{!v.groupNames}" var="group">
-                    <p style="background-color:lightblue; color:darkblue">
-                    <lightning:button aura:id="deleteGroupButton" variant="destructive" value="{!group}" label="Delete" title="Delete Group" onclick="{!c.deleteGroup}" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    {!group}</p> 
-                </aura:iteration>
+        <aura:if isTrue="{!v.haveGroups}"> 
+            <div class="slds-border_bottom">
+                <p><b>Available Groups</b></p>
             </div>
-        </div>
+            <div class="slds-scrollable" aura:id="groupScrollBox" style="height:15rem;width:24rem; background-color:rgb(250, 250, 250)">
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                <div class="slds-text-longform" style="width:150%">
+                    <aura:iteration items="{!v.groupNames}" var="group">
+                        <p style="background-color:lightblue; color:darkblue">
+                        <lightning:button aura:id="deleteGroupButton" variant="destructive" value="{!group}" label="Delete" title="Delete Group" onclick="{!c.deleteGroup}" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        {!group}</p> 
+                    </aura:iteration>
+                </div>
+            </div>
+        </aura:if>
         <aura:set attribute="footer">
             {!v.cardFooterGroupTitle}
         </aura:set>
     </lightning:card>
 
-    <lightning:card>
-        <aura:set attribute="title">
-            <Lightning:icon iconName="utility:connected_apps" size="small"/>
-            {!v.cardHeaderUserTitle}
-        </aura:set>
-            <div class="slds-grid slds-wrap">
-                <div class="slds-col slds-size_2-of-12">
-                    <Lightning:select name="selectGroup" label="Select Group" aura:id="groupSelect" value="{!v.groupSelected}" onchange="{!c.groupSelect}">
-                        <aura:iteration items="{!v.groupNames}" var="group">
-                            <option value="{!group}">{!group}</option>
-                        </aura:iteration>
-                    </Lightning:select>
-                    <br/>
-                </div>
-            </div>
-            <div class="slds-border_bottom">
-                For object: <b>{!v.groupObjectName}</b>
-            </div>
-            <br/>
-           <div aura:id="checkboxAddInputs">
-                <lightning:button aura:id="addToGroupButton" variant="brand" value="addToGroupButton" label="Add to Group" title="Add To Group" onclick="{!c.moveToGroup}" />     <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <div class="slds-text-longform" style="width:150%">
-                        <aura:iteration items="{!v.availableUserNames}" var="user">
-                            <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
-                        
-                        </aura:iteration>
+    <aura:if isTrue="{!v.haveGroups}"> 
+        <lightning:card>
+            <aura:set attribute="title">
+                <Lightning:icon iconName="utility:connected_apps" size="small"/>
+                {!v.cardHeaderUserTitle}
+            </aura:set>
+                <div class="slds-grid slds-wrap">
+                    <div class="slds-col slds-size_2-of-12">
+                        <Lightning:select name="selectGroup" label="Select Group" aura:id="groupSelect" value="{!v.groupSelected}" onchange="{!c.groupSelect}">
+                            <aura:iteration items="{!v.groupNames}" var="group">
+                                <option value="{!group}">{!group}</option>
+                            </aura:iteration>
+                        </Lightning:select>
+                        <br/>
                     </div>
                 </div>
-            </div>
-
-            <div aura:id="checkboxRemoveInputs">
-                <lightning:button aura:id="removeFromGroupButton" variant="brand" value="removeFromGroupButton" label="Remove From Group" title="Remove From Group" onclick="{!c.moveFromGroup}"/>     
-                <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <div class="slds-text-longform" style="width:150%">
-                        <aura:iteration items="{!v.selectedUserNames}" var="user">
-                            <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
+                <br/>
+            
+            <div aura:id="checkboxAddInputs">
+                    <lightning:button aura:id="addToGroupButton" variant="brand" value="addToGroupButton" label="Add to Group" title="Add To Group" onclick="{!c.moveToGroup}" />     <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <div class="slds-text-longform" style="width:150%">
+                            <aura:iteration items="{!v.availableUserNames}" var="user">
+                                <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
                             
-                        </aura:iteration>
+                            </aura:iteration>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-                <!--
+                <div aura:id="checkboxRemoveInputs">
+                    <lightning:button aura:id="removeFromGroupButton" variant="brand" value="removeFromGroupButton" label="Remove from Group" title="Remove from Group" onclick="{!c.moveFromGroup}"/>     
+                    <div class="slds-scrollable" aura:id="availableUsersScrollBox" style="height:15rem;width:50rem; background-color:rgb(250, 250, 250)">
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <div class="slds-text-longform" style="width:150%">
+                            <aura:iteration items="{!v.selectedUserNames}" var="user">
+                                <lightning:input type="checkbox" label="{!user.label}" value="{!user.value}"/>
+                                
+                            </aura:iteration>
+                        </div>
+                    </div>
+                </div>
 
-            Duallistbox locks up with 15000 users.  It takes 3 minutes for it to be available. For this reason we are trying a different approach
-            <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
-                            sourceLabel="Available Users"
-                            selectedLabel="Selected Users"
-                            fieldLevelHelp="Add or remove users from selected group"
-                            options="{! v.userNames }"
-                            value="{!v.selectedUserNames}"/>
-            -->
-        <aura:set attribute="footer">
-            {!v.cardFooterUserFooter}
-        </aura:set><br/>
-    </lightning:card>
+                    <!--
 
+                Duallistbox locks up with 15000 users.  It takes 3 minutes for it to be available. For this reason we are trying a different approach
+                <lightning:dualListbox aura:id="selectOptions" name="Select Users"  label= "Select User"
+                                sourceLabel="Available Users"
+                                selectedLabel="Selected Users"
+                                fieldLevelHelp="Add or remove users from selected group"
+                                options="{! v.userNames }"
+                                value="{!v.selectedUserNames}"/>
+                -->
+            <aura:set attribute="footer">
+                {!v.cardFooterUserFooter}
+            </aura:set><br/>
+        </lightning:card>
+    </aura:if>
     <!--Modal Dialog Box-->
     <div class="slds-m-around_xx-large">
         <!--Use aura:if tag to display/hide popup based on isModalOpen value-->  
@@ -167,24 +165,37 @@
                     <!-- Modal/Popup Box Header Starts here-->
                     <header class="slds-modal__header">
                         <lightning:buttonIcon iconName="utility:close"
-                                                onclick="{! c.closeModel }"
+                                                onclick="{! c.openModalToggle }"
                                                 alternativeText="close"
                                                 variant="bare-inverse"
                                                 class="slds-modal__close"/>
-                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Modal/PopUp Box</h2>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Public Groups version 1.0</h2>
                     </header>
                     <!--Modal/Popup Box Body Starts here-->
                     <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
-                        <p><b>Modals/Popup Box are used to display content in a layer above the app. This paradigm is used in cases such as the creation or editing of a record, as well as various types of messaging and wizards.
-                            </b>
-                        </p>
+                        <u><i>Permission needed: Manage Users</i></u><br/><br/>
+                        <b>Steps:</b><br/>
+                        1.  Select the object for the groups that you wish to create from the Select Object drop down box. Currently, Account, Opportunities and Properties are supported. <br/><br/>
+                        2.  Create the group name under the object by entering the name in the Group Name box <br/><br/>
+                        3.  Delete a group by clicking the delete button in the Available Groups section.  Deletions are instant and not recoverable. <br/><br/>
+                        4.  Select which users belong to which group by clicking a checkbox next to each user and select the Add to Group button. <br/><br/>
+                        5.  Remove users from a group by checking the user and clicking the Remove from Group button. <br/><br/><br/>
+
+                        <p>Records owned by the group member will be shared with other members of that group.  Groups access level is set to read only.  If a sharing rule outside of this application is used, that rule supersedes this application's rules.</p>
+                        <br/>
+                        <p>Group naming conventions allows for alphanumeric names with no spaces with the first character required to be a letter and the name can be no longer than 34 characters.  Underscores are not allowed when creating groups under this application.</p>
+                        <br/>
+                        <p>Groups created by this application have the following format groupname__objectprefix.  For example, a group called MarcusMillichap for Accounts would be listed as MarcusMillichap_001.  001 is the prefix for all account IDs.</p> 
+                        <br/>
+                        <p>Remove group members for groups created by this application using only this application.  Using Setup and then public groups and manually removing or adding a user, will result in unexpected behavior</p><br/>
+                        <p>Account sharing share child records Opportunities and Contacts with access level none.  To share those records, create a group for the object.  Contacts is not yet supported.</p>
                     </div>
                     <!--Modal/Popup Box Footer Starts here-->
                     <footer class="slds-modal__footer">
                         <lightning:button variant="brand"
                                             label="Close"
                                             title="Close"
-                                            onclick="{! c.closeModel }"/>
+                                            onclick="{! c.openModalToggle }"/>
                     </footer>
                 </div>
             </section>

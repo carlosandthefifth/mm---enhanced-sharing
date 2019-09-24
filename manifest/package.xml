@@ -9,6 +9,14 @@
         <name>ApexClass</name>
     </types>
     <types>
+        <members>accountTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>propertyTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
         <members>opportunityTrigger</members>
         <name>ApexTrigger</name>
     </types>

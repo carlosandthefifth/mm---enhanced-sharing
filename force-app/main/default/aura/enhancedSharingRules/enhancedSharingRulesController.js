@@ -51,8 +51,9 @@
       helper.showToast(component, event, helper);
    },
 
-   openModel: function(component, event, helper) {
-      // Set isModalOpen attribute to true
+   openModalToggle: function(component, event, helper) {
+      console.log("openModalToggle");
+      helper.openModalToggle(component,event,helper);
    },
     
    closeModel: function(component, event, helper) {

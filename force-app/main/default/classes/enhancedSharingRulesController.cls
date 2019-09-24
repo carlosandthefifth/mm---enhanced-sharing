@@ -79,28 +79,96 @@ public class enhancedSharingRulesController {
 
     @AuraEnabled 
     public static void removeFromMembership(List<ID> UserIDsRemoved, String GroupName, String ObjectType) {
-        String fullGroupName = GroupName + '_006';
+     
+        String fullGroupName = GroupName + '_' + get_IDPrefix(objectType);
+     
         Group aGroup = [SELECT ID FROM Group where Name = :fullGroupName][0];
+     
+        for (ID userID : UserIDsRemoved) {
+            system.debug('id to remove: '+ UserIDsRemoved);
+        }
         List<groupMember> groupMembers = [SELECT ID, UserOrGroupID FROM groupMember WHERE UserOrGroupID IN :UserIDsRemoved];
+     
         for (groupMember gm : groupMembers) {
             system.debug('gm.id: ' + gm.id);
             system.debug('gm.userorgroupid: ' + gm.userorgroupid);
         }
         delete groupMembers;
 
-        List<Opportunity> opportunities = [SELECT ID, OwnerID FROM Opportunity WHERE OwnerID IN :UserIDsRemoved];
 
-        List<ID> OppIDs = new List<ID>();
-        List<ID> OwnerIDs = new List<ID>(); 
-        for (opportunity o : opportunities) {
-            OppIDS.add(o.id);
-            OwnerIDs.add(o.ownerId);
+        List<SObject> sobjects = new List<SObject>(); 
+
+        if (ObjectType == 'Account') {
+
+            sobjects = (List<Account>)[SELECT ID, OwnerID FROM Account WHERE OwnerID IN :UserIDsRemoved];
+            
+            List<ID>IDs = new List<ID>();
+            for (sobject a : sobjects) {
+                system.debug('a.id: ' + a.id);
+                IDs.add(a.id);
+            }
+
+            system.debug('UserIDsRemoved: ' + UserIDsRemoved);
+            List<AccountShare> Shares = [SELECT ID FROM AccountShare WHERE UserOrGroupID = :aGroup.id AND accountId IN :IDs];
+            IDs.clear();
+            for (AccountShare a : Shares) {
+                system.debug('a.id: ' + a.id);
+                IDs.add(a.id);
+            }
+            deleteSharing(IDs,'Account');
         }
+        if (ObjectType == 'Asset') {
+            sobjects = (List<Asset>)[SELECT ID, OwnerID FROM Asset WHERE OwnerID IN :UserIDsRemoved];
+            system.debug('aGroup.id: ' + agroup.id);
+            
+            List<ID>IDs = new List<ID>();
+            for (sobject a : sobjects) {
+                system.debug('a.id: ' + a.id);
+                IDs.add(a.id);
+            }
+
+
+            List<AssetShare> Shares = [SELECT ID FROM AssetShare WHERE UserOrGroupID = :aGroup.id AND AssetId IN :IDs];
+            system.debug('agroup.id: ' + agroup.id);
+            system.debug('shares.size(): ' + shares.size());
+            
+            IDs.clear();
+            for (AssetShare a : Shares) {
+                IDs.add(a.id);
+            }
+            deleteSharing(IDs,'Asset');
+        }
+
+        if (ObjectType == 'Opportunity') {
+            sobjects = (List<Opportunity>)[SELECT ID, OwnerID FROM Opportunity WHERE OwnerID IN :UserIDsRemoved];
+            
+            List<ID>IDs = new List<ID>();
+            for (sobject a : sobjects) {
+                system.debug('a.id: ' + a.id);
+                IDs.add(a.id);
+            }   
+   
+            List<OpportunityShare> Shares = [SELECT ID FROM OpportunityShare WHERE UserOrGroupID = :aGroup.id AND OpportunityID IN :IDs];
+
+            IDs.clear();
+            for (OpportunityShare a : Shares) {
+                IDs.add(a.id);
+            }
+            deleteSharing(IDs,'Opportunity');
+        }
+    
+
+/*
+        List<ID> IDs = new List<ID>();
+        for (sobject s : sobjects) {
+            IDS.add(s.id);
+        }
+  */      
 
   //      List<OpportunityShare> opportunityShares = [SELECT ID FROM opportunityShare where OpportunityID IN :OppIDS AND UserOrGroupID NOT IN :OwnerIDs];
     //    delete opportunityShares;
         
-        updateSharing(OppIDS);
+    //    updateSharing(IDS, ObjectType);
 
     }
 
@@ -117,20 +185,28 @@ public class enhancedSharingRulesController {
         }
         insert groupMembers;
         system.debug('groupMembers: ' + groupMembers);
+        List<SObject> sobjects = new List<SObject>();
 
-        List<Opportunity> opportunities = [SELECT ID, OwnerID FROM Opportunity WHERE OwnerID IN :UserIDsAdded];
+        if (objectType == 'Account')
+            sobjects = (List<Account>)[SELECT ID, OwnerID FROM Account WHERE OwnerID IN :UserIDsAdded];
+
+        if (objectType == 'Asset')
+            sobjects = (List<Asset>)[SELECT ID, OwnerID FROM Asset WHERE OwnerID IN :UserIDsAdded];
+
+        if (objectType == 'Opportunity')
+            sobjects = (List<Opportunity>)[SELECT ID, OwnerID FROM Opportunity WHERE OwnerID IN :UserIDsAdded];
 
 
-        List<ID> OppIDs = New List<ID>();
-        for (opportunity o : opportunities) {
-            OppIDS.add(o.id);
+        List<ID> IDs = New List<ID>();
+        for (sobject Id : sobjects) {
+            IDS.add(id.id);
         }
 
        // List<OpportunityShare> opp_shares = [SELECT ID FROM OpportunityShare WHERE OpportunityID IN :OppIDS];
        // delete opp_shares;
 
         // future call to avoid mixed_dml_operation error
-        updateSharing(OppIDS);
+        updateSharing(IDS, ObjectType);
     }
 
     @AuraEnabled
@@ -186,9 +262,43 @@ public class enhancedSharingRulesController {
         return selectedUsers;
     }
 
+
     @future 
-    private static void updateSharing(List<ID> IDs) {
-        List<Opportunity> opportunities = [SELECT ID, OwnerID FROM Opportunity WHERE ID IN :IDs];
-        customPublicGroupSharingHandler.onInsert(opportunities,'Opportunity');
+    private static void deleteSharing(List<ID> IDs, String objectType) {
+        if (objectType == 'Account') {
+            List<AccountShare> Shares = [SELECT ID FROM AccountShare WHERE ID IN :IDs];
+            delete Shares;
+        }
+        if (objectType == 'Asset') {
+            List<AssetShare> Shares = [SELECT ID FROM AssetShare WHERE ID IN :IDs];
+            delete Shares;
+        }
+        if (objectType == 'Opportunity') {
+            List<OpportunityShare> Shares = [SELECT ID FROM OpportunityShare WHERE ID IN :IDs];
+            delete Shares;
+        }
+    }
+
+    @future 
+    private static void updateSharing(List<ID> IDs, String objectType) {
+
+        List<Account> accounts = new List<Account>();
+        List<Asset> assets = new List<Asset>();
+        List<Opportunity> opportunities = new List<Opportunity>();
+
+        
+        if (objectType=='Account') {
+            accounts = [SELECT ID, OwnerID FROM Account WHERE ID IN :IDs];
+            customPublicGroupSharingHandler.onInsert(accounts,'Account');
+        }
+        if (objectType=='Asset') {
+            assets = [SELECT ID, OwnerID FROM Asset WHERE ID IN :IDs];
+            customPublicGroupSharingHandler.onInsert(assets,'Asset');
+        }
+
+        if (objectType=='Opportunity') {
+            opportunities = [SELECT ID, OwnerID FROM Opportunity WHERE ID IN :IDs];
+            customPublicGroupSharingHandler.onInsert(opportunities,'Opportunity');
+        }
     }
 }
