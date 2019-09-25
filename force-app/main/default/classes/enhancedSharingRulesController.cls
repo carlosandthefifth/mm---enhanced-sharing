@@ -1,5 +1,7 @@
 public class enhancedSharingRulesController {
-    private static List<String> allowedObjectNames = new List<String>{'Account','Opportunity', 'Property'};  // contacts has a trigger that needs to be re-written
+    
+    // contacts has a trigger that needs to be re-written
+    private static List<String> allowedObjectNames = new List<String>{'Account','Opportunity', 'Property'};  
     private static List<User>   selectedUsers = new List<User>();
     private static List<User>   availableUsers = new List<User>();
     private static List<User>   AllUserNames  = new List<User>();
